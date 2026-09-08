@@ -28,11 +28,35 @@ a cloud speech API, a corporate endpoint — or keep the bundled local server.
 
 ---
 
+## Screenshots
+
+The mic button sits in the composer tool row, between the context-window
+indicator and the send button:
+
+![Composer with the voice-input mic button](assets/composer-row.png)
+
+Right-click the mic button to open the **Configs** dialog:
+
+![Right-click opens the Configs menu](assets/configs-menu.png)
+
+In the Configs dialog you can change the transcription endpoint, the voice
+command phrases, the language, the LLM cleanup settings (model, reasoning
+effort, API key) and more — see [Configuration](#configuration):
+
+![Voice input settings dialog](assets/configs.png)
+
+---
+
 ## Repository layout
 
 ```
 dsh-voice-input/
 ├── README.md                       ← you are here
+├── LICENSE                         ← MIT
+├── assets/                         ← screenshots used in this README
+│   ├── composer-row.png
+│   ├── configs.png
+│   └── configs-menu.png
 ├── local-whisper-server/
 │   ├── server.py                   ← FastAPI + faster-whisper
 │   ├── requirements.txt
