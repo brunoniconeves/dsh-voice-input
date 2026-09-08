@@ -1,18 +1,18 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 22px;
   width: 100%;
   box-sizing: border-box;
   max-height: min(62vh, 440px);
   overflow-y: auto;
-  padding-right: 4px;
+  padding: 2px 4px 8px 0;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .label {
