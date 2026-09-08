@@ -49,6 +49,13 @@ export function ConfigModal({ open, onClose, initial, onSave, getModels, session
     { id: 'max', label: t('effort.max') },
   ]
 
+  /** Predefined transcription languages the user may pick directly. */
+  const LANGUAGE_OPTIONS: readonly { id: string; label: string }[] = [
+    { id: 'pt', label: t('language.pt') },
+    { id: 'es', label: t('language.es') },
+    { id: 'en', label: t('language.en') },
+  ]
+
   // Re-seed the form each time the dialog opens so a late settings sync is not lost.
   useEffect(() => {
     if (!open) return
@@ -76,7 +83,7 @@ export function ConfigModal({ open, onClose, initial, onSave, getModels, session
   }, [open, cleanup, getModels, sessionId])
 
   const dirty = endpoint.trim() === '' || listen.trim() === '' || stop.trim() === '' || send.trim() === ''
-    || language.trim() === '' || (cleanup && cleanupApiKey.trim() === '') || (cleanup && cleanupModel.trim() === '')
+    || (cleanup && cleanupApiKey.trim() === '') || (cleanup && cleanupModel.trim() === '')
 
   const save = (): void => {
     if (dirty) return
@@ -167,14 +174,17 @@ export function ConfigModal({ open, onClose, initial, onSave, getModels, session
         </label>
         <label className={css.field}>
           <span className={css.label}>{t('config.language')}</span>
-          <input
+          <select
             className={css.input}
-            type="text"
             value={language}
-            maxLength={2}
-            placeholder="en"
             onChange={(event) => { setLanguage(event.target.value) }}
-          />
+          >
+            {LANGUAGE_OPTIONS.map(option => (
+              <option key={option.id} value={option.id}>{option.label}</option>
+            ))}
+            {language.trim() !== '' && !LANGUAGE_OPTIONS.some(option => option.id === language)
+              && <option value={language}>{language}</option>}
+          </select>
         </label>
         <label className={css.field}>
           <span className={css.label}>{t('config.serverDir')}</span>

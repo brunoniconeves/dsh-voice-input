@@ -27,6 +27,9 @@ export type VoiceKey =
   | 'config.save'
   | 'config.cancel'
   | 'config.language'
+  | 'language.pt'
+  | 'language.es'
+  | 'language.en'
   | 'effort.off'
   | 'effort.low'
   | 'effort.high'
@@ -63,6 +66,9 @@ export const zh: Record<VoiceKey, string> = {
   'config.save': '保存',
   'config.cancel': '取消',
   'config.language': '转写语言（ISO 双字母，如 en/pt）',
+  'language.pt': '葡萄牙语（pt）',
+  'language.es': '西班牙语（es）',
+  'language.en': '英语（en）',
   'effort.off': 'Off',
   'effort.low': 'Low',
   'effort.high': 'High',
@@ -100,6 +106,9 @@ export const en: Record<VoiceKey, string> = {
   'config.save': 'Save',
   'config.cancel': 'Cancel',
   'config.language': 'Transcription language (ISO 2-letter, e.g. en/pt)',
+  'language.pt': 'Portuguese (pt)',
+  'language.es': 'Spanish (es)',
+  'language.en': 'English (en)',
   'effort.off': 'Off',
   'effort.low': 'Low',
   'effort.high': 'High',
