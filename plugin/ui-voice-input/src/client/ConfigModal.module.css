@@ -1,0 +1,74 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  max-height: min(62vh, 440px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.labelStrong {
+  font-size: 13px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--dsw-alias-border-l2-darkmode-thin);
+  border-radius: 8px;
+  background: var(--dsw-specific-input-major);
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--dsw-alias-state-business-primary);
+}
+
+.switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-top: 4px;
+  cursor: pointer;
+}
+
+.checkbox {
+  margin-top: 3px;
+  accent-color: var(--dsw-alias-state-business-primary);
+  cursor: pointer;
+}
+
+.switchCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

@@ -1,0 +1,19 @@
+# Node / harness plugin build outputs
+node_modules/
+lib/
+lib/types/
+dist/
+*.tsbuildinfo
+
+# Local Whisper server
+local-whisper-server/venv/
+local-whisper-server/__pycache__/
+local-whisper-server/*.pyc
+local-whisper-server/*.log
+local-whisper-server/.pytest_cache/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
