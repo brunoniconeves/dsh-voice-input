@@ -88,10 +88,10 @@ you rarely need to start it by hand — but you can, and this README documents h
 
 | Env var                    | Default                                                          | Meaning |
 |----------------------------|------------------------------------------------------------------|---------|
-| `WHISPER_MODEL`            | `base`                                                           | `tiny`/`base`/`small`/`medium`/`large-v3` |
-| `WHISPER_DEVICE`           | `cpu`                                                            | `cpu`, `cuda`, or `auto` |
-| `WHISPER_COMPUTE_TYPE`     | `int8`                                                           | `int8` (CPU), `float16` (GPU) |
-| `WHISPER_LANGUAGE`         | `en` (if unset → server forces `en`; unset the plugin default is `pt`) | force a 2-letter language; omit to auto-detect |
+| `WHISPER_MODEL`            | `base`                                                           | `tiny`/`base`/`small`/`medium`/`large-v3`/`large-v3-turbo` (or any faster-whisper HF repo id) |
+| `WHISPER_DEVICE`           | `auto`                                                           | `auto` (GPU when genuinely usable, else CPU), `cuda`, or `cpu` |
+| `WHISPER_COMPUTE_TYPE`     | `float16` on GPU / `int8` on CPU                                 | `int8`, `float16`, `float32`, `int8_float32`, … |
+| `WHISPER_LANGUAGE`         | `en` (plugin default is `pt`)                                    | force a 2-letter language; omit to auto-detect |
 | `WHISPER_BEAM_SIZE`        | `5`                                                              | beam width |
 | `WHISPER_HOST` / `WHISPER_PORT` | `127.0.0.1` / `9000`                                         | bind address |
 | `WHISPER_CORS_ORIGINS`     | `http://127.0.0.1:3080,http://localhost:3080`                     | comma-separated allowed origins |
@@ -99,6 +99,43 @@ you rarely need to start it by hand — but you can, and this README documents h
 | `CLEANUP_MODEL`            | `deepseek-chat`                                                  | default cleanup model |
 | `CLEANUP_API_KEY`          | unset                                                            | server-side cleanup API key (kept out of the browser) |
 | `CLEANUP_REASONING_EFFORT` | `off`                                                            | cleanup reasoning effort; `""` omits the field |
+
+### Recommended: `large-v3-turbo`
+
+`large-v3-turbo` is much more accurate than `small` and still fast. On a 16-core
+CPU (`int8`) it runs at roughly **2.5× realtime** — e.g. ~4.5 s for 11 s of
+audio. The plugin's **Whisper model** setting defaults to it, so the auto-start
+loads it automatically.
+
+```sh
+WHISPER_MODEL=dropbox-dash/faster-whisper-large-v3-turbo WHISPER_LANGUAGE=pt python server.py
+```
+
+> The short `large-v3-turbo` alias in faster-whisper still points at the renamed
+> `mobiuslabsgmbh/...` repo, so use the canonical `dropbox-dash/...` repo id (the
+> plugin's dropdown already does).
+
+### GPU (CUDA)
+
+`WHISPER_DEVICE=auto` (the default) uses the GPU **only when it is genuinely
+usable** — it checks that the device is present *and* that the CUDA runtime
+libraries load, so it never picks a GPU it cannot actually run on. To enable the
+GPU, install CUDA 12 runtime libs ([cuBLAS + cuDNN 8](https://github.com/OpenNMT/CTranslate2/blob/master/docs/installation.md)):
+
+```sh
+pip install nvidia-cublas-cu12 "nvidia-cudnn-cu12==8.9.*"
+export LD_LIBRARY_PATH="$VIRTUAL_ENV/lib/python3.12/site-packages/nvidia/cublas/lib:$VIRTUAL_ENV/lib/python3.12/site-packages/nvidia/cudnn/lib:$LD_LIBRARY_PATH"
+```
+
+Caveats (measured on a **GTX 1070**, Pascal / sm_61):
+
+- Pascal supports only **`float32`** in CTranslate2 — `float16` fails
+  ("does not support efficient float16 computation") and int8 needs sm_70+. The
+  loader falls back `float16 → float32` automatically on CUDA.
+- The CUDA libs are ~2 GB; make sure you have disk space.
+- On CPU the same `large-v3-turbo` model already gives ~2.5× realtime, which is
+  plenty for voice input — the GPU is an optimisation, not a requirement.
+
 
 ## Smoke test
 

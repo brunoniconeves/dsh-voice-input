@@ -24,12 +24,14 @@ export type VoiceKey =
   | 'config.cleanupEffort'
   | 'config.cleanupApiKey'
   | 'config.serverDir'
+  | 'config.serverModel'
   | 'config.save'
   | 'config.cancel'
   | 'config.language'
   | 'language.pt'
   | 'language.es'
   | 'language.en'
+  | 'whisperModel.turbo'
   | 'effort.off'
   | 'effort.low'
   | 'effort.high'
@@ -63,12 +65,14 @@ export const zh: Record<VoiceKey, string> = {
   'config.cleanupEffort': '清理推理等级',
   'config.cleanupApiKey': 'API 密钥（sk-...）',
   'config.serverDir': '本地 Whisper 服务目录（免提模式下自动启动）',
+  'config.serverModel': 'Whisper 模型（本地服务器加载）',
   'config.save': '保存',
   'config.cancel': '取消',
   'config.language': '转写语言（ISO 双字母，如 en/pt）',
   'language.pt': '葡萄牙语（pt）',
   'language.es': '西班牙语（es）',
   'language.en': '英语（en）',
+  'whisperModel.turbo': 'large-v3-turbo（质量最佳，建议用 GPU）',
   'effort.off': 'Off',
   'effort.low': 'Low',
   'effort.high': 'High',
@@ -103,12 +107,14 @@ export const en: Record<VoiceKey, string> = {
   'config.cleanupEffort': 'Cleanup reasoning effort',
   'config.cleanupApiKey': 'API key (sk-...)',
   'config.serverDir': 'Local Whisper server directory (auto-started in hands-free mode)',
+  'config.serverModel': 'Whisper model (loaded by the local server)',
   'config.save': 'Save',
   'config.cancel': 'Cancel',
   'config.language': 'Transcription language (ISO 2-letter, e.g. en/pt)',
   'language.pt': 'Portuguese (pt)',
   'language.es': 'Spanish (es)',
   'language.en': 'English (en)',
+  'whisperModel.turbo': 'large-v3-turbo (best quality, GPU recommended)',
   'effort.off': 'Off',
   'effort.low': 'Low',
   'effort.high': 'High',

@@ -2,7 +2,6 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import type { SettingsScope } from '@deepseek-ai/dsh-settings'
-import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 import {
   VOICE_SETTINGS_NAMESPACE, VoiceSettingsSchema, type VoiceSettings,
 } from './voice-settings.ts'
@@ -11,10 +10,11 @@ import { ensureWhisperServer } from './whisper-lifecycle.ts'
 export {
   DEFAULT_CLEANUP, DEFAULT_CLEANUP_API_KEY, DEFAULT_CLEANUP_EFFORT, DEFAULT_CLEANUP_MODEL,
   DEFAULT_ENDPOINT, DEFAULT_HANDS_FREE, DEFAULT_LANGUAGE, DEFAULT_LISTEN_COMMAND,
-  DEFAULT_SEND_COMMAND, DEFAULT_STOP_COMMAND, DEFAULT_SERVER_DIR,
+  DEFAULT_SEND_COMMAND, DEFAULT_SERVER_DIR, DEFAULT_SERVER_MODEL, DEFAULT_STOP_COMMAND,
   VOICE_CLEANUP_API_KEY_FIELD, VOICE_CLEANUP_EFFORT_FIELD, VOICE_CLEANUP_FIELD, VOICE_CLEANUP_MODEL_FIELD,
   VOICE_ENDPOINT_FIELD, VOICE_HANDS_FREE_FIELD, VOICE_LANGUAGE_FIELD, VOICE_LISTEN_FIELD,
-  VOICE_SEND_FIELD, VOICE_SERVER_DIR_FIELD, VOICE_SETTINGS_NAMESPACE, VOICE_STOP_FIELD, type VoiceSettings,
+  VOICE_SEND_FIELD, VOICE_SERVER_DIR_FIELD, VOICE_SERVER_MODEL_FIELD, VOICE_SETTINGS_NAMESPACE,
+  VOICE_STOP_FIELD, type VoiceSettings,
 } from './voice-settings.ts'
 
 /** Keep a reference to the in-flight auto-start so we do not spawn twice. */
@@ -27,7 +27,7 @@ let autoStartTask: Promise<boolean> | undefined
 export function apply(ctx: Context): void {
   ctx.inject(['settings'], (settingsCtx) => {
     const scope = settingsCtx.settings.register(
-      settingsNamespace(VOICE_SETTINGS_NAMESPACE),
+      VOICE_SETTINGS_NAMESPACE,
       VoiceSettingsSchema,
     )
     startHandsFreeLifecycle(ctx, scope)

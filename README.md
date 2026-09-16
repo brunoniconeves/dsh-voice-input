@@ -200,12 +200,18 @@ python3.12 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# recommended for the plugin (model + pt + port 9000 = plugin default)
-WHISPER_MODEL=small WHISPER_LANGUAGE=pt python server.py
+# recommended: large-v3-turbo + pt + port 9000 (= plugin defaults)
+WHISPER_MODEL=dropbox-dash/faster-whisper-large-v3-turbo WHISPER_LANGUAGE=pt python server.py
 ```
 
 It listens on `http://127.0.0.1:9000` by default. The plugin’s default endpoint
 is `http://127.0.0.1:9000/inference` (Configs → Endpoint).
+
+`large-v3-turbo` runs at ~2.5× realtime on a 16-core CPU and is far more accurate
+than `small`; the **Whisper model** setting defaults to it. The server auto-uses
+a CUDA GPU when one is genuinely usable (device = `auto`), otherwise the CPU —
+see the server README for the CUDA/cuDNN setup and the Pascal (`GTX 10xx`)
+caveat.
 
 With **hands-free** on, you don’t need to start it manually — the plugin’s host
 half validates and auto-starts it.
@@ -220,13 +226,14 @@ half validates and auto-starts it.
 |-------|---------|
 | **Endpoint** | where the plugin POSTs the recorded audio (an HTTP transcription endpoint). Default `http://127.0.0.1:9000/inference`. |
 | **Activation / Pause / Send phrases** | the voice commands that start, stop (→ draft), and send a capture in hands-free mode. |
-| **Transcription language** | two-letter ISO code, e.g. `pt`; empty = server auto-detect. |
+| **Transcription language** | predefined list — Portuguese (`pt`), Spanish (`es`), English (`en`). |
 | **Hands-free mode** | keep the mic on and listen for the commands. |
 | **Clean up transcription** | enable the conversation-context LLM cleanup. |
 | **Cleanup model** | the model used for cleanup (populated from the connection’s available models). |
 | **Cleanup reasoning effort** | `off`/`low`/`high`/`max` for the cleanup LLM (`off` = fastest). |
 | **API key** | the OpenAI-compatible key for the cleanup LLM. |
 | **Local Whisper server directory** | where the plugin looks for the server source to auto-start (host side). |
+| **Whisper model** | faster-whisper model the local server loads: `tiny`/`base`/`small`/`medium`/`large-v3`/`large-v3-turbo` (default: `large-v3-turbo`). |
 
 Settings are stored under the `voice-input` settings namespace and persist in
 `~/.dsh/settings.yaml` (and localStorage).

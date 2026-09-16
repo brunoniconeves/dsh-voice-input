@@ -8,19 +8,25 @@
  * standard `inputActions`. Export discipline: packages/client/AGENTS.md — only
  * the plugin body and the injected-face type leave the entrypoint.
  */
-import type {
-  ClientContext, ObservableSnapshot, SettingsScope,
-} from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
+import type { SettingsScope } from '@deepseek-ai/dsh-client-ui-settings/client'
+import type { SessionId } from '@deepseek-ai/dsh-api-remotes/client'
 // Type-only: pulls the ui-conversation SlotMap merge (the input.right seat).
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 // Type-only: pulls the ctx.settingsScope Context merge.
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
+// Type-only: pulls the ctx.slots Context merge.
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+// Type-only: pulls the ctx.modelDirectories Context merge (cleanup-model dropdown).
+import type {} from '@deepseek-ai/dsh-client-ui-model-selection/client'
 import {
   DEFAULT_CLEANUP, DEFAULT_CLEANUP_API_KEY, DEFAULT_CLEANUP_EFFORT, DEFAULT_CLEANUP_MODEL,
   DEFAULT_ENDPOINT, DEFAULT_HANDS_FREE, DEFAULT_LANGUAGE, DEFAULT_LISTEN_COMMAND,
-  DEFAULT_SEND_COMMAND, DEFAULT_SERVER_DIR, DEFAULT_STOP_COMMAND, VOICE_SETTINGS_NAMESPACE, type VoiceSettings,
+  DEFAULT_SEND_COMMAND, DEFAULT_SERVER_DIR, DEFAULT_SERVER_MODEL, DEFAULT_STOP_COMMAND,
+  VOICE_SETTINGS_NAMESPACE, type VoiceSettings,
 } from '../voice-settings.ts'
 import { VoiceInputButton } from './VoiceInputButton.tsx'
 import { en, zh, type VoiceKey } from './locales.ts'
@@ -39,8 +45,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 /** Dictionary namespace owned by this plugin. */
 const NS = 'voice'
 
-/** Required services: the slot registry, the copy, the settings scope, and its connection transport. */
-export const inject = ['slots', 'locale', 'connection', 'settingsScope']
+/** Required services: the slot registry, the copy, the settings scope, and the model directory. */
+export const inject = ['slots', 'locale', 'modelDirectories', 'settingsScope']
 
 /** Narrow a settings section to a fully-defaulted VoiceSettings. */
 function deriveSettings(value: VoiceSettings | undefined): VoiceSettings {
@@ -56,6 +62,7 @@ function deriveSettings(value: VoiceSettings | undefined): VoiceSettings {
     cleanupModel: (value?.cleanupModel ?? '').trim() || DEFAULT_CLEANUP_MODEL,
     cleanupEffort: (value?.cleanupEffort ?? '').trim() || DEFAULT_CLEANUP_EFFORT,
     serverDir: (value?.serverDir ?? '').trim() || DEFAULT_SERVER_DIR,
+    serverModel: (value?.serverModel ?? '').trim() || DEFAULT_SERVER_MODEL,
   }
 }
 
@@ -126,14 +133,11 @@ export function apply(ctx: ClientContext): void {
   const voiceSettings = source.observable
   const setSettings = (patch: Partial<VoiceSettings>): void => { source.set(patch) }
   const getEndpoint = (): string => source.getEndpoint()
-  const connection = ctx.get('connection') as { api?: { sessions?: { models?: (req: { sessionId: string }) => Promise<{ result: { ok: boolean; value: { groups: readonly { name: string; models: readonly { id: string; name: string }[] }[] } } }> } } } | undefined
   const getModels = async (sessionId: string): Promise<readonly CleanupModelOption[]> => {
-    const models = connection?.api?.sessions?.models
-    if (models === undefined) return []
     try {
-      const { result } = await models({ sessionId })
-      if (!result.ok) return []
-      return result.value.groups.flatMap(group =>
+      const directory = ctx.modelDirectories.directoryFor(sessionId as SessionId)
+      await directory.load()
+      return directory.store.getSnapshot().groups.flatMap(group =>
         group.models.map(model => ({ id: model.id, label: `${group.name} · ${model.name}` })),
       )
     } catch (_modelsFailure) {

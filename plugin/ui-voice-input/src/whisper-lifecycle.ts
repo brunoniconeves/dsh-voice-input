@@ -36,8 +36,8 @@ const OUTPUT_MAX_BYTES = 200_000
  */
 export const DEFAULT_WHISPER_SERVER_DIR = '/home/bruno/Projects/local-whisper-server'
 
-/** The faster-whisper model size used when starting the server. */
-const WHISPER_MODEL = 'small'
+/** Fallback faster-whisper model when the settings name none (canonical repo id). */
+const FALLBACK_WHISPER_MODEL = 'dropbox-dash/faster-whisper-large-v3-turbo'
 
 /**
  * Map the transcription endpoint to its `/health` route.
@@ -119,7 +119,7 @@ function launchSpec(
       argv: [python, 'server.py'],
       cwd,
       env: {
-        WHISPER_MODEL,
+        WHISPER_MODEL: settings.serverModel.trim() || FALLBACK_WHISPER_MODEL,
         WHISPER_LANGUAGE: settings.language || 'pt',
         WHISPER_HOST: url.hostname,
         WHISPER_PORT: url.port || '9000',
@@ -188,7 +188,7 @@ async function startServerSweep(
     return false
   }
   liveHandleByOrigin.set(origin, handle)
-  ctx.logger.info('voice-input: started the local Whisper server (pid=%d)', handle.pid)
+  ctx.logger.info('voice-input: started the local Whisper server')
   // A server that died before going healthy should not keep dying silently.
   void handle.done.then(() => {
     if (liveHandleByOrigin.get(origin) === handle) liveHandleByOrigin.delete(origin)

@@ -39,6 +39,7 @@ export function ConfigModal({ open, onClose, initial, onSave, getModels, session
   const [cleanupModel, setCleanupModel] = useState(initial.cleanupModel)
   const [cleanupEffort, setCleanupEffort] = useState(initial.cleanupEffort)
   const [serverDir, setServerDir] = useState(initial.serverDir)
+  const [serverModel, setServerModel] = useState(initial.serverModel)
   const [modelOptions, setModelOptions] = useState<readonly CleanupModelOption[]>([])
 
   /** Reasoning effort choices for the cleanup LLM; `off` is the fastest. */
@@ -47,6 +48,16 @@ export function ConfigModal({ open, onClose, initial, onSave, getModels, session
     { id: 'low', label: t('effort.low') },
     { id: 'high', label: t('effort.high') },
     { id: 'max', label: t('effort.max') },
+  ]
+
+  /** faster-whisper models the local server may load (host auto-start). */
+  const WHISPER_MODEL_OPTIONS: readonly { id: string; label: string }[] = [
+    { id: 'tiny', label: 'tiny' },
+    { id: 'base', label: 'base' },
+    { id: 'small', label: 'small' },
+    { id: 'medium', label: 'medium' },
+    { id: 'large-v3', label: 'large-v3' },
+    { id: 'dropbox-dash/faster-whisper-large-v3-turbo', label: t('whisperModel.turbo') },
   ]
 
   /** Predefined transcription languages the user may pick directly. */
@@ -70,6 +81,7 @@ export function ConfigModal({ open, onClose, initial, onSave, getModels, session
     setCleanupModel(initial.cleanupModel)
     setCleanupEffort(initial.cleanupEffort)
     setServerDir(initial.serverDir)
+    setServerModel(initial.serverModel)
   }, [open, initial])
 
   // Load the available models for the cleanup-model dropdown when cleanup is on.
@@ -99,6 +111,7 @@ export function ConfigModal({ open, onClose, initial, onSave, getModels, session
       cleanupModel: cleanup ? cleanupModel.trim() : '',
       cleanupEffort: cleanup ? cleanupEffort.trim() : '',
       serverDir: serverDir.trim(),
+      serverModel: serverModel.trim(),
     })
     onClose()
   }
@@ -118,6 +131,7 @@ export function ConfigModal({ open, onClose, initial, onSave, getModels, session
       cleanupModel: cleanup ? cleanupModel.trim() : '',
       cleanupEffort: cleanup ? cleanupEffort.trim() : '',
       serverDir: serverDir.trim(),
+      serverModel: serverModel.trim(),
     })
     onClose()
   }
@@ -194,6 +208,20 @@ export function ConfigModal({ open, onClose, initial, onSave, getModels, session
             value={serverDir}
             onChange={(event) => { setServerDir(event.target.value) }}
           />
+        </label>
+        <label className={css.field}>
+          <span className={css.label}>{t('config.serverModel')}</span>
+          <select
+            className={css.input}
+            value={serverModel}
+            onChange={(event) => { setServerModel(event.target.value) }}
+          >
+            {WHISPER_MODEL_OPTIONS.map(option => (
+              <option key={option.id} value={option.id}>{option.label}</option>
+            ))}
+            {serverModel.trim() !== '' && !WHISPER_MODEL_OPTIONS.some(option => option.id === serverModel)
+              && <option value={serverModel}>{serverModel}</option>}
+          </select>
         </label>
         <label className={css.switch}>
           <input

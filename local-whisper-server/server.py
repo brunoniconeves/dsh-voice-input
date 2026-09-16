@@ -5,9 +5,9 @@ plugin talks to: POST a multipart ``file`` (audio) and receive ``{"text": "..."}
 
 Configuration is via environment variables (see README.md):
 
-- ``WHISPER_MODEL``        model size: tiny/base/small/medium/large-v3 (default base)
-- ``WHISPER_DEVICE``       cpu / cuda / auto (default cpu)
-- ``WHISPER_COMPUTE_TYPE`` int8 / float16 / float32 (default int8)
+- ``WHISPER_MODEL``        tiny/base/small/medium/large-v3/large-v3-turbo (default base)
+- ``WHISPER_DEVICE``       cpu / cuda / auto (default auto: GPU when available)
+- ``WHISPER_COMPUTE_TYPE`` int8 / float16 / float32 (default float16 on GPU, int8 on CPU)
 - ``WHISPER_LANGUAGE``     2-letter language to force, or auto-detect when unset
 - ``WHISPER_BEAM_SIZE``    beam width (default 5)
 - ``WHISPER_HOST`` / ``WHISPER_PORT``  bind address (default 127.0.0.1:9000)
@@ -23,9 +23,40 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from faster_whisper import WhisperModel
 
+def _cuda_usable() -> bool:
+    """True only when a GPU is present AND the CUDA runtime libs can load.
+
+    CTranslate2's wheel links CUDA dynamically: the device can be visible while
+    inference still fails with "libcublas.so.12 is not found". Probe both the
+    driver (device count) and the runtime libraries so `auto` never picks a
+    GPU it cannot actually use.
+    """
+    import ctypes
+
+    try:
+        import ctranslate2
+
+        if ctranslate2.get_cuda_device_count() <= 0:
+            return False
+    except Exception:
+        return False
+    for lib in ("libcublas.so.12", "libcudnn.so.9", "libcudnn.so.8"):
+        try:
+            ctypes.CDLL(lib)
+            return True
+        except OSError:
+            continue
+    return False
+
+
 MODEL_NAME = os.environ.get("WHISPER_MODEL", "base")
-DEVICE = os.environ.get("WHISPER_DEVICE", "cpu")
-COMPUTE_TYPE = os.environ.get("WHISPER_COMPUTE_TYPE", "int8")
+# Device: `auto` (default) uses the GPU only when it is genuinely usable,
+# otherwise the CPU. `WHISPER_DEVICE=cpu`/`cuda` forces one explicitly.
+DEVICE = os.environ.get("WHISPER_DEVICE", "auto")
+if DEVICE == "auto":
+    DEVICE = "cuda" if _cuda_usable() else "cpu"
+# Compute type: float16 on GPU, int8 on CPU, unless explicitly overridden.
+COMPUTE_TYPE = os.environ.get("WHISPER_COMPUTE_TYPE") or ("float16" if DEVICE == "cuda" else "int8")
 BEAM_SIZE = int(os.environ.get("WHISPER_BEAM_SIZE", "5"))
 LANGUAGE = os.environ.get("WHISPER_LANGUAGE") or "en"
 HOST = os.environ.get("WHISPER_HOST", "127.0.0.1")
@@ -66,7 +97,19 @@ _model: WhisperModel | None = None
 def _load_model() -> WhisperModel:
     global _model
     if _model is None:
-        _model = WhisperModel(MODEL_NAME, device=DEVICE, compute_type=COMPUTE_TYPE)
+        # Older GPUs (e.g. Pascal / GTX 10xx) cannot do efficient float16 in
+        # CTranslate2, so fall back through safe compute types on failure.
+        candidates = [COMPUTE_TYPE]
+        if DEVICE == "cuda":
+            candidates += ["float16", "int8_float32", "float32"]
+        last_error: Exception | None = None
+        for compute_type in dict.fromkeys(candidates):
+            try:
+                _model = WhisperModel(MODEL_NAME, device=DEVICE, compute_type=compute_type)
+                return _model
+            except Exception as exc:  # unsupported compute type for this device
+                last_error = exc
+        raise last_error if last_error is not None else RuntimeError("model load failed")
     return _model
 
 

@@ -56,8 +56,16 @@ export const DEFAULT_CLEANUP_EFFORT = 'off'
 /** Field carrying the local Whisper server's source directory (for host auto-start). */
 export const VOICE_SERVER_DIR_FIELD = 'serverDir'
 
+/** Field carrying the faster-whisper model the local server loads (host auto-start). */
+export const VOICE_SERVER_MODEL_FIELD = 'serverModel'
+
 /** Default directory holding the local Whisper server (venv + server.py). */
 export const DEFAULT_SERVER_DIR = '/home/bruno/Projects/local-whisper-server'
+
+/** Default faster-whisper model: large-v3-turbo — best quality/speed trade-off.
+ * Uses the canonical repo id because the short `large-v3-turbo` alias in
+ * faster-whisper still points at the renamed `mobiuslabsgmbh/...` repo. */
+export const DEFAULT_SERVER_MODEL = 'dropbox-dash/faster-whisper-large-v3-turbo'
 
 /** Default phrases (comma-separated) that start hands-free transcription. Only
  * multi-word, distinctive phrases are defaults: a bare word like "iniciar" can
@@ -100,6 +108,8 @@ export interface VoiceSettings {
   cleanupEffort: string
   /** Directory holding the local Whisper server source (host auto-start). */
   serverDir: string
+  /** faster-whisper model the host auto-start loads (tiny/base/small/medium/large-v3/large-v3-turbo). */
+  serverModel: string
 }
 
 /** Durable voice-input schema; also the wire envelope the browser scope validates against. */
@@ -115,4 +125,5 @@ export const VoiceSettingsSchema: z<VoiceSettings> = z.object({
   [VOICE_CLEANUP_MODEL_FIELD]: z.string().default(DEFAULT_CLEANUP_MODEL),
   [VOICE_CLEANUP_EFFORT_FIELD]: z.string().default(DEFAULT_CLEANUP_EFFORT),
   [VOICE_SERVER_DIR_FIELD]: z.string().default(DEFAULT_SERVER_DIR),
+  [VOICE_SERVER_MODEL_FIELD]: z.string().default(DEFAULT_SERVER_MODEL),
 })

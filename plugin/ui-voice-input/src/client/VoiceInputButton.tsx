@@ -47,26 +47,14 @@ const IDLE_LEVELS = Object.freeze<readonly number[]>(Array<number>(WAVEFORM_BARS
 
 /** Minimal structural view of the session snapshot for conversation-context extraction. */
 interface ContextSnapshot {
-  chat?: {
-    nodes?: {
-      values?: () => readonly { kind: string; content?: readonly { type: string; text?: string }[] }[]
-    }
-  }
+  queue?: readonly { text?: string | null }[]
 }
 
-/** Build a compact recent-conversation context (last few user/assistant text messages). */
+/** Build a compact recent-conversation context from the last queued message texts. */
 function conversationContext(snapshot: ContextSnapshot): string {
-  const nodes = snapshot.chat?.nodes?.values?.() ?? []
-  const lines: string[] = []
-  for (const node of nodes) {
-    if (node.kind !== 'user' && node.kind !== 'assistant') continue
-    const text = (node.content ?? [])
-      .filter(block => block.type === 'text')
-      .map(block => block.text ?? '')
-      .join(' ')
-      .trim()
-    if (text !== '') lines.push(`${node.kind}: ${text}`)
-  }
+  const lines = (snapshot.queue ?? [])
+    .map(entry => entry.text?.trim() ?? '')
+    .filter(text => text !== '')
   return lines.slice(-8).join('\n').slice(-2_000)
 }
 
