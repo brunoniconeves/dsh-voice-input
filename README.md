@@ -208,10 +208,11 @@ It listens on `http://127.0.0.1:9000` by default. The plugin’s default endpoin
 is `http://127.0.0.1:9000/inference` (Configs → Endpoint).
 
 `large-v3-turbo` runs at ~2.5× realtime on a 16-core CPU and is far more accurate
-than `small`; the **Whisper model** setting defaults to it. The server auto-uses
-a CUDA GPU when one is genuinely usable (device = `auto`), otherwise the CPU —
-see the server README for the CUDA/cuDNN setup and the Pascal (`GTX 10xx`)
-caveat.
+than `small`; the **Whisper model** setting defaults to it. On a CUDA GPU it
+reaches **~16× realtime** (install `nvidia-cublas-cu12` + `nvidia-cudnn-cu12==8.9.*`
+into the venv — the server finds them itself). `WHISPER_DEVICE=auto` picks the GPU
+when it is genuinely usable, else the CPU; see the server README for details and
+the Pascal (`GTX 10xx`) note.
 
 With **hands-free** on, you don’t need to start it manually — the plugin’s host
 half validates and auto-starts it.

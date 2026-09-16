@@ -117,23 +117,36 @@ WHISPER_MODEL=dropbox-dash/faster-whisper-large-v3-turbo WHISPER_LANGUAGE=pt pyt
 
 ### GPU (CUDA)
 
-`WHISPER_DEVICE=auto` (the default) uses the GPU **only when it is genuinely
-usable** — it checks that the device is present *and* that the CUDA runtime
-libraries load, so it never picks a GPU it cannot actually run on. To enable the
-GPU, install CUDA 12 runtime libs ([cuBLAS + cuDNN 8](https://github.com/OpenNMT/CTranslate2/blob/master/docs/installation.md)):
+`WHISPER_DEVICE=auto` (the default) uses the GPU when it is genuinely usable and
+otherwise the CPU. To enable the GPU, install the CUDA 12 runtime libs
+([cuBLAS + cuDNN 8](https://github.com/OpenNMT/CTranslate2/blob/master/docs/installation.md))
+into the venv — the server finds them itself (it re-execs once with
+`LD_LIBRARY_PATH` set), so you do **not** need to export anything:
 
 ```sh
 pip install nvidia-cublas-cu12 "nvidia-cudnn-cu12==8.9.*"
-export LD_LIBRARY_PATH="$VIRTUAL_ENV/lib/python3.12/site-packages/nvidia/cublas/lib:$VIRTUAL_ENV/lib/python3.12/site-packages/nvidia/cudnn/lib:$LD_LIBRARY_PATH"
 ```
 
-Caveats (measured on a **GTX 1070**, Pascal / sm_61):
+Measured on a **GTX 1070** (Pascal / sm_61), `large-v3-turbo`:
 
-- Pascal supports only **`float32`** in CTranslate2 — `float16` fails
-  ("does not support efficient float16 computation") and int8 needs sm_70+. The
-  loader falls back `float16 → float32` automatically on CUDA.
-- The CUDA libs are ~2 GB; make sure you have disk space.
-- On CPU the same `large-v3-turbo` model already gives ~2.5× realtime, which is
+| Device | compute | 11 s of audio | realtime |
+|--------|---------|---------------|----------|
+| CPU (16 cores) | `int8` | ~4.3 s | ~2.5× |
+| GPU | `int8_float32` | **~0.7 s** | **~16×** |
+| GPU | `float32` | ~0.95 s | ~12× |
+
+Notes:
+
+- The loader asks CTranslate2 which compute types the device supports
+  (`get_supported_compute_types`) and picks the best one, so an unsupported type
+  is **never attempted**. On Pascal, `float16` is unsupported — attempting it can
+  *hang*, so `auto` selects `int8_float32` (int8 weights, float32 compute) there.
+  Force one with `WHISPER_COMPUTE_TYPE` if you like.
+- `/health` reports the compute type actually in use once the model is loaded.
+- The CUDA libs are ~2 GB — make sure the venv's filesystem has room. (On a
+  near-full ext4 root, `df` shows only the share available to your user; the
+  rest is root-reserved.)
+- No GPU? The same `large-v3-turbo` on CPU already gives ~2.5× realtime, which is
   plenty for voice input — the GPU is an optimisation, not a requirement.
 
 
